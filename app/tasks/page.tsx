@@ -361,7 +361,7 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
       } relative`}
       onClick={() => setSelectedTask(task)}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3">
         <input
           type="checkbox"
           checked={task.completed}
@@ -370,11 +370,11 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
             toggleComplete(task.id, task.completed)
           }}
           onClick={(e) => e.stopPropagation()}
-          className="w-5 h-5 mt-1 rounded border-border cursor-pointer accent-primary"
+          className="w-4 h-4 mt-1 rounded border-border cursor-pointer accent-primary flex-shrink-0"
         />
         <div className="flex-1 min-w-0">
-          <h3 className={`font-semibold text-foreground mb-2 ${task.completed ? "line-through" : ""}`}>
-            {truncateText(task.title, 30)}
+          <h3 className={`font-semibold text-foreground mb-2 ${task.completed ? "line-through" : ""} text-xs sm:text-sm leading-snug break-all` }>
+            {task.title}
           </h3>
           {task.description && (
             <p className="text-sm text-muted-foreground mb-2">{truncateText(task.description, 30)}</p>
@@ -383,7 +383,7 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
             <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(task.priority)}`}>
               {task.priority}
             </span>
-            <span className="relative px-3 py-1.5 text-sm font-bold bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 text-white rounded-full shadow-lg shadow-yellow-500/50 flex items-center gap-1 overflow-hidden">
+            <span className="relative px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-bold bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 text-white rounded-full shadow-md sm:shadow-lg shadow-yellow-500/50 flex items-center gap-1 overflow-hidden">
               <span
                 className="absolute inset-0 rounded-full border-2 border-transparent animate-snake-border"
                 style={{
@@ -391,7 +391,7 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
                   backgroundSize: "200% 100%",
                 }}
               ></span>
-              <Zap className="w-4 h-4 relative z-10" />
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4 relative z-10" />
               <span className="relative z-10">+{task.xp || 3} XP</span>
             </span>
             {task.category && (
@@ -408,16 +408,16 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
           </div>
         </div>
         {!task.completed && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-3 sm:mt-0 sm:ml-2">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 handleFocusTask(task.id)
               }}
-              className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-lg font-semibold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+              className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-lg font-semibold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl text-sm md:text-base"
             >
               <Zap className="w-5 h-5" />
-              Start Focus Session
+              <span className="hidden sm:inline">Start Focus Session</span>
             </button>
             <div className="relative">
               <button

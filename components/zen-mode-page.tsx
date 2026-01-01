@@ -419,6 +419,13 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
   const handleSuccessClaim = async () => {
     if (!sessionData) return
 
+    // Play XP gain sound immediately on user click to satisfy browser user-gesture requirement
+    try {
+      playSound("xpgain")
+    } catch (e) {
+      console.warn("[v0] playSound failed on user gesture:", e)
+    }
+
     setShowDebriefModal(false)
 
     const supabase = getSupabaseBrowserClient()

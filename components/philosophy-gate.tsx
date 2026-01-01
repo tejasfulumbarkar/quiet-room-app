@@ -11,14 +11,18 @@ export function PhilosophyGate({ onClose }: PhilosophyGateProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    // Play entrance sound
-    playSoundEffect("entrytrim")
-
     // Fade in animation
     setTimeout(() => setIsVisible(true), 100)
   }, [])
 
   const handleClose = () => {
+    // Play entry sound as part of the user's click (user gesture allowed)
+    try {
+      playSoundEffect("entrytrim")
+    } catch (e) {
+      // ignore
+    }
+
     setIsVisible(false)
     setTimeout(onClose, 300)
   }

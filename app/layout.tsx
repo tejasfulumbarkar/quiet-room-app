@@ -9,7 +9,8 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Quiet Room - Turn Focus into XP",
-  description: "Gamified task management dashboard",
+  description: "Turn your daily tasks into an epic RPG adventure. Join the Quiet Room to focus, earn XP, and level up your life",
+  keywords: ["Quiet Room", "Productivity", "Gamification", "Focus App", "RPG To-Do List"],
   generator: "v0.app",
   icons: {
     icon: [

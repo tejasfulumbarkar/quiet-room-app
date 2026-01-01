@@ -403,25 +403,25 @@ export default function RewardsPage() {
         itemType="bounty"
       />
 
-      <div className="min-h-screen bg-black text-white p-8 md:p-4">
+      <div className="min-h-screen bg-black text-white p-6 md:p-4 overflow-x-hidden">
         {/* Header */}
-        <div className="max-w-7xl mx-auto mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="max-w-7xl mx-auto mb-6">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-1">
                 Rewards Store
               </h1>
-              <p className="text-gray-400 font-mono">Spend your earned Aura on upgrades and permissions</p>
+              <p className="text-sm text-gray-400 font-mono">Spend your earned Aura on upgrades and permissions</p>
             </div>
             {/* Aura Balance */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 blur-xl opacity-50 animate-pulse"></div>
-              <div className="relative bg-black/80 backdrop-blur-sm border border-cyan-500/50 rounded-2xl px-4 md:px-8 py-4 md:py-4">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 blur-xl opacity-40 animate-pulse"></div>
+              <div className="relative bg-black/80 backdrop-blur-sm border border-cyan-500/40 rounded-2xl px-3 md:px-6 py-2 md:py-3">
                 <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3">
-                  <img src="/images/aura.png" alt="Aura" className="w-10 h-10 md:w-10 md:h-10" />
+                  <img src="/images/aura.png" alt="Aura" className="w-8 h-8 md:w-10 md:h-10" />
                   <div className="text-center md:text-left">
-                    <p className="text-xs md:text-xs text-gray-400 font-mono uppercase tracking-wider">Your Balance</p>
-                    <p className="text-3xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent font-mono">
+                    <p className="text-[10px] md:text-xs text-gray-400 font-mono uppercase tracking-wider">Your Balance</p>
+                    <p className="text-xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent font-mono">
                       {auraBalance.toLocaleString()}
                     </p>
                   </div>
@@ -431,10 +431,11 @@ export default function RewardsPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-2">
+          <div className="relative">
+            <div className="flex gap-2 flex-nowrap bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-2 overflow-x-auto md:overflow-x-visible">
             <button
               onClick={() => setActiveTab("system")}
-              className={`flex-1 py-3 px-6 rounded-lg font-semibold font-mono transition-all ${
+              className={`w-1/2 md:flex-1 py-3 px-2 rounded-lg font-semibold font-mono transition-all ${
                 activeTab === "system"
                   ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-cyan-500/50"
                   : "text-gray-400 hover:text-white hover:bg-gray-800/50"
@@ -445,7 +446,7 @@ export default function RewardsPage() {
             </button>
             <button
               onClick={() => setActiveTab("bounty")}
-              className={`flex-1 py-3 px-6 rounded-lg font-semibold font-mono transition-all ${
+              className={`w-1/2 md:flex-1 py-3 px-2 rounded-lg font-semibold font-mono transition-all ${
                 activeTab === "bounty"
                   ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/50"
                   : "text-gray-400 hover:text-white hover:bg-gray-800/50"
@@ -456,7 +457,7 @@ export default function RewardsPage() {
             </button>
             <button
               onClick={() => setActiveTab("inventory")}
-              className={`flex-1 py-3 px-6 rounded-lg font-semibold font-mono transition-all ${
+              className={`w-1/2 md:flex-1 py-3 px-2 rounded-lg font-semibold font-mono transition-all ${
                 activeTab === "inventory"
                   ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-cyan-500/50"
                   : "text-gray-400 hover:text-white hover:bg-gray-800/50"
@@ -465,6 +466,11 @@ export default function RewardsPage() {
               <Package className="w-5 h-5 inline mr-2" />
               Inventory
             </button>
+              </div>
+
+              {/* Right-edge fade to indicate more tabs available on small screens */}
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 md:hidden rounded-r-xl"
+                style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%)' }} />
           </div>
         </div>
 
