@@ -403,7 +403,10 @@ export default function DashboardPage() {
             <div className="mb-8 flex items-start gap-6">
               <div className="flex-1">
                 <div className="flex items-center gap-4 mb-4">
-                  <img src="/ui/mascot.png" alt="Quiet Room Mascot" className="w-24 h-24 object-contain" />
+                  <video className="w-24 h-24 object-contain" autoPlay muted loop playsInline>
+                    <source src="/ui/mascot.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
                   <div>
                     <h2 className="text-4xl font-bold text-primary mb-2">Welcome Back!</h2>
                     <p className="text-muted-foreground">Complete tasks to earn XP and level up</p>
