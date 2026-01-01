@@ -213,7 +213,7 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
                 {goal.xp} / {goal.max_xp} XP
               </p>
               <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full">
-                <img src="/images/aura.jpg" alt="Aura" className="w-3 h-3 rounded-full" />
+                <img src="/images/aura.png" alt="Aura" className="w-3 h-3 rounded-full" />
                 <span className="text-xs font-semibold text-purple-400">~{estimatedAura}</span>
               </div>
             </div>
@@ -552,7 +552,7 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
 
                 <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg p-4 border border-purple-500/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <img src="/images/aura.jpg" alt="Aura" className="w-4 h-4 rounded-full" />
+                    <img src="/images/aura.png" alt="Aura" className="w-4 h-4 rounded-full" />
                     <span className="text-xs text-muted-foreground">Aura Reward</span>
                   </div>
                   <p className="text-xl font-bold text-purple-400">

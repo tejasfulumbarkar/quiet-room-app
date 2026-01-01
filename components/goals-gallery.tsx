@@ -539,7 +539,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
 
                 <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg p-3 md:p-4 border border-purple-500/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <img src="/images/aura.jpg" alt="Aura" className="w-3 h-3 md:w-4 md:h-4 rounded-full" />
+                    <img src="/images/aura.png" alt="Aura" className="w-3 h-3 md:w-4 md:h-4 rounded-full" />
                     <span className="text-xs text-muted-foreground">Aura Reward</span>
                   </div>
                   <p className="text-lg md:text-xl font-bold text-purple-400">
