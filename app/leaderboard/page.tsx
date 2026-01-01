@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Trophy, Crown, Medal, Zap, TrendingUp } from "lucide-react"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { getLevelInfo } from "@/lib/leveling-system"
@@ -84,17 +84,17 @@ export default function LeaderboardPage() {
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <div className="relative flex items-center justify-center w-12 h-12">
-          <Crown className="w-8 h-8 text-primary animate-pulse drop-shadow-[0_0_15px_rgba(147,51,234,0.8)]" />
+        <div className="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12">
+          <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-primary animate-pulse drop-shadow-[0_0_15px_rgba(147,51,234,0.8)]" />
           <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
         </div>
       )
     } else if (rank === 2) {
-      return <Medal className="w-8 h-8 text-gray-300" />
+      return <Medal className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300" />
     } else if (rank === 3) {
-      return <Medal className="w-8 h-8 text-amber-600" />
+      return <Medal className="w-6 h-6 sm:w-8 sm:h-8 text-amber-600" />
     } else {
-      return <span className="text-muted-foreground font-bold text-lg">#{rank}</span>
+      return <span className="text-muted-foreground font-bold text-sm sm:text-lg">#{rank}</span>
     }
   }
 
@@ -242,7 +242,7 @@ export default function LeaderboardPage() {
               <div
                 key={entry.user_id}
                 className={`
-                  rounded-xl p-5 transition-all duration-300
+                  rounded-xl p-2 sm:p-5 transition-all duration-300
                   hover:scale-[1.02]
                   ${getCardStyle(entry.rank, isCurrentUser)}
                 `}
@@ -253,7 +253,7 @@ export default function LeaderboardPage() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-4 relative z-10">
+                <div className="flex items-center gap-2 sm:gap-4 relative z-10">
                   <div className="flex-shrink-0">{getRankBadge(entry.rank)}</div>
 
                   <div className="flex-shrink-0">
@@ -261,11 +261,11 @@ export default function LeaderboardPage() {
                       <img
                         src={entry.avatar_url || "/placeholder.svg"}
                         alt={entry.display_name}
-                        className="w-14 h-14 rounded-full"
+                        className="w-8 h-8 sm:w-14 sm:h-14 rounded-full"
                       />
                     ) : (
                       <div
-                        className={`w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-2xl font-bold ${
+                        className={`w-8 h-8 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-lg sm:text-2xl font-bold ${
                           entry.rank === 1 ? "ring-4 ring-primary/50" : ""
                         }`}
                       >
@@ -276,38 +276,38 @@ export default function LeaderboardPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-lg text-foreground truncate">
+                      <h3 className="font-bold text-xs sm:text-lg text-foreground truncate">
                         {entry.display_name || entry.username || "Anonymous"}
                       </h3>
                       {isCurrentUser && (
-                        <span className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full font-semibold">
+                        <span className="px-2 py-0.5 text-[10px] sm:text-xs bg-primary/20 text-primary rounded-full font-semibold">
                           You
                         </span>
                       )}
                       {entry.rank === 1 && (
-                        <span className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full font-semibold">
+                        <span className="px-2 py-0.5 text-[10px] sm:text-xs bg-primary/20 text-primary rounded-full font-semibold">
                           Champion
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{getLevelInfo(entry.level).name}</p>
+                    <p className="text-[10px] sm:text-sm text-muted-foreground">{getLevelInfo(entry.level).name}</p>
                   </div>
 
-                  <div className="flex items-center gap-6 flex-shrink-0">
+                  <div className="flex items-center gap-3 sm:gap-6 flex-shrink-0">
                     <div className="text-right">
                       <div className="flex items-center gap-2 mb-1">
                         <Zap className="w-4 h-4 text-primary" />
-                        <span className="font-bold text-xl text-foreground">{entry.total_xp.toLocaleString()}</span>
+                        <span className="font-bold text-base sm:text-xl text-foreground">{entry.total_xp.toLocaleString()}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">Total XP</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Total XP</p>
                     </div>
 
                     <div className="text-right">
                       <div className="flex items-center gap-2 mb-1">
                         <TrendingUp className="w-4 h-4 text-primary" />
-                        <span className="font-bold text-xl text-foreground">{entry.level}</span>
+                        <span className="font-bold text-base sm:text-xl text-foreground">{entry.level}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">Level</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Level</p>
                     </div>
                   </div>
                 </div>
