@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { primeAudio } from "@/lib/sound-effects"
 import { Zap, Target, MessageSquare, Trophy, Timer, Star, CheckCircle2, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -42,7 +43,14 @@ export default function LandingPage() {
           </nav>
 
           <Button
-            onClick={() => router.push("/auth/signup")}
+            onClick={() => {
+              try {
+                primeAudio("entrytrim")
+              } catch (e) {
+                /* ignore */
+              }
+              router.push("/auth/signup")
+            }}
             size="lg"
             className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600"
           >
@@ -78,7 +86,14 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
               <Button
-                onClick={() => router.push("/auth/signup")}
+                onClick={() => {
+                  try {
+                    primeAudio("entrytrim")
+                  } catch (e) {
+                    /* ignore */
+                  }
+                  router.push("/auth/signup")
+                }}
                 size="lg"
                 className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 h-14 px-8 text-lg"
               >
@@ -450,7 +465,14 @@ export default function LandingPage() {
             today!
           </p>
           <Button
-            onClick={() => router.push("/auth/signup")}
+            onClick={() => {
+              try {
+                primeAudio("entrytrim")
+              } catch (e) {
+                /* ignore */
+              }
+              router.push("/auth/signup")
+            }}
             size="lg"
             className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 h-16 px-12 text-xl"
           >

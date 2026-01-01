@@ -1,10 +1,11 @@
 "use client"
 
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { ChevronDown, X, Calendar, Zap, Target, MoreVertical, Edit2, Trash2, AlertTriangle } from "lucide-react"
 import { useState, useEffect } from "react"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { GoalCreationWizard } from "@/components/goal-creation-wizard"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { getDeadlineInfo } from "@/lib/deadline-utils"
 
 interface Goal {
   id: string
@@ -156,6 +157,7 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
     const daysRemaining = getDaysRemaining(goal.target_date)
     const estimatedHours = goal.target_hours || Math.ceil(goal.max_xp / 300)
     const estimatedAura = estimatedHours * 10
+    const deadlineInfo = getDeadlineInfo(goal.target_date, goal.timeline)
 
     return (
       <div className="relative">
@@ -174,8 +176,15 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
               {truncateText(goal.title, 30)}
             </h4>
             <div className="flex items-center gap-2">
-              {daysRemaining !== undefined && (
-                <span className="text-xs text-muted-foreground whitespace-nowrap">{daysRemaining} days left</span>
+              {deadlineInfo && (
+                <span
+                  className={`text-xs whitespace-nowrap flex items-center gap-1 ${deadlineInfo.colorClass} ${
+                    deadlineInfo.shouldPulse ? "animate-pulse font-bold" : "font-medium"
+                  }`}
+                >
+                  <span>{deadlineInfo.emoji}</span>
+                  <span>{deadlineInfo.text}</span>
+                </span>
               )}
               <button
                 onClick={(e) => {
@@ -203,7 +212,7 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
               <p className="text-xs text-muted-foreground">
                 {goal.xp} / {goal.max_xp} XP
               </p>
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full">
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full">
                 <img src="/images/aura.jpg" alt="Aura" className="w-3 h-3 rounded-full" />
                 <span className="text-xs font-semibold text-purple-400">~{estimatedAura}</span>
               </div>

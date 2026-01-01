@@ -2,6 +2,7 @@
 
 import { Zap, Target, Timer, Trophy, Gift, Play, CheckCircle2, TrendingUp, Shield, Swords } from "lucide-react"
 import Link from "next/link"
+import { primeAudio } from "@/lib/sound-effects"
 import Image from "next/image"
 import TerminalDemo from "@/components/terminal-demo"
 import { ZenModeDemo } from "@/components/zen-mode-demo"
@@ -33,6 +34,13 @@ export default function LandingPage() {
             </a>
             <Link
               href="/auth/login"
+              onClick={() => {
+                try {
+                  primeAudio("entrytrim")
+                } catch (e) {
+                  /* ignore */
+                }
+              }}
               className="px-6 py-2.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-bold hover:shadow-lg hover:shadow-primary/50 transition-all hover:scale-105"
             >
               Enter the Game
@@ -73,6 +81,13 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-12 md:mb-16 px-4">
             <Link
               href="/auth/login"
+              onClick={() => {
+                try {
+                  primeAudio("entrytrim")
+                } catch (e) {
+                  /* ignore */
+                }
+              }}
               className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-bold text-base md:text-lg hover:shadow-xl hover:shadow-primary/50 transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 md:w-5 md:h-5" />

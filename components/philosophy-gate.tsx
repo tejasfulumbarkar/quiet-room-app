@@ -9,20 +9,52 @@ interface PhilosophyGateProps {
 
 export function PhilosophyGate({ onClose }: PhilosophyGateProps) {
   const [isVisible, setIsVisible] = useState(false)
+  // pre-load the entry sound to reduce latency
+  useEffect(() => {
+    try {
+      const url = playSoundEffect && typeof playSoundEffect === "function" ? undefined : undefined
+    } catch (e) {
+      // ignore
+    }
+    const audio = new Audio("/sounds/entrytrim.mp3")
+    // attempt to load so browser can decode early
+    audio.load()
+  }, [])
 
   useEffect(() => {
     // Fade in animation
     setTimeout(() => setIsVisible(true), 100)
   }, [])
 
-  const handleClose = () => {
-    // Play entry sound as part of the user's click (user gesture allowed)
+  // Play entry sound when the modal becomes visible
+  useEffect(() => {
+    if (!isVisible) return
+    // Try to play now. If the browser blocks playback (NotAllowedError),
+    // attach a one-time user-interaction handler to play the sound when
+    // the user next interacts with the page.
     try {
-      playSoundEffect("entrytrim")
+      const playPromise = playSoundEffect("entrytrim")
+      if (playPromise && typeof (playPromise as Promise<any>).catch === "function") {
+        ;(playPromise as Promise<any>).catch((err: any) => {
+          const isNotAllowed = err && (err.name === "NotAllowedError" || /user didn't interact/i.test(err?.message || ""))
+          if (!isNotAllowed) return
+
+          const handler = () => {
+            playSoundEffect("entrytrim").catch(() => {})
+            window.removeEventListener("click", handler)
+            window.removeEventListener("keydown", handler)
+          }
+
+          window.addEventListener("click", handler, { once: true })
+          window.addEventListener("keydown", handler, { once: true })
+        })
+      }
     } catch (e) {
       // ignore
     }
+  }, [isVisible])
 
+  const handleClose = () => {
     setIsVisible(false)
     setTimeout(onClose, 300)
   }

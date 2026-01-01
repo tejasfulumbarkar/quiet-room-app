@@ -4,11 +4,11 @@ import type React from "react"
 
 import { Plus, ImageIcon, MoreVertical, Edit2, Trash2, X, Target, Zap } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
-import { useToast } from "@/hooks/use-toast"
 import { GoalCreationWizard } from "@/components/goal-creation-wizard"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { getDeadlineInfo } from "@/lib/deadline-utils"
 
 interface VisionBoardItem {
   id: string
@@ -27,6 +27,7 @@ interface Goal {
   max_xp: number
   target_hours: number
   motivation: string
+  target_date?: string
 }
 
 interface NewGoal {
@@ -35,6 +36,7 @@ interface NewGoal {
   motivation: string
   image: string
   target_hours: number
+  target_date: string
 }
 
 interface GoalsGalleryProps {
@@ -54,8 +56,6 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
   const [isEditWizardOpen, setIsEditWizardOpen] = useState(false)
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [uploadError, setUploadError] = useState<string>("")
-  const { toast } = useToast()
 
   const handleCreateGoal = async (goal: NewGoal) => {
     const supabase = getSupabaseBrowserClient()
@@ -78,6 +78,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
       xp: 0,
       progress: 0,
       status: "active",
+      target_date: goal.target_date,
     })
 
     if (!error) {
@@ -90,10 +91,6 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
     fetchVisionItems()
     fetchGoals()
   }, [])
-
-  useEffect(() => {
-    if (!isUploadOpen) setUploadError("")
-  }, [isUploadOpen])
 
   const fetchVisionItems = async () => {
     const supabase = getSupabaseBrowserClient()
@@ -138,24 +135,6 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    // clear previous error
-    setUploadError("")
-
-    const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-    if (file.size > MAX_FILE_SIZE) {
-      // show inline error in the modal
-      setUploadError("Not allowed — files larger than 5MB are not allowed.")
-      // also show a destructive toast for visibility
-      toast({
-        title: "Not allowed",
-        description: "Files larger than 5MB are not allowed.",
-        variant: "destructive",
-      })
-      // reset the input
-      if (fileInputRef.current) fileInputRef.current.value = ""
-      return
-    }
 
     setUploading(true)
     const supabase = getSupabaseBrowserClient()
@@ -228,6 +207,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
         image_url: updatedGoal.image,
         target_hours: updatedGoal.target_hours,
         max_xp: calculated_max_xp,
+        target_date: updatedGoal.target_date,
       })
       .eq("id", goalToEdit.id)
 
@@ -366,6 +346,19 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
                 <h4 className="font-semibold text-sm md:text-base text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
                   {goal.title}
                 </h4>
+                {(() => {
+                  const deadlineInfo = getDeadlineInfo(goal.target_date, goal.timeline)
+                  return deadlineInfo ? (
+                    <div
+                      className={`text-xs mb-2 flex items-center gap-1 ${deadlineInfo.colorClass} ${
+                        deadlineInfo.shouldPulse ? "animate-pulse font-bold" : "font-medium"
+                      }`}
+                    >
+                      <span>{deadlineInfo.emoji}</span>
+                      <span>{deadlineInfo.text}</span>
+                    </div>
+                  ) : null
+                })()}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground capitalize">{goal.timeline}</span>
@@ -406,10 +399,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
               <label className="text-sm font-medium mb-2 block">Upload Image File</label>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
               <button
-                onClick={() => {
-                  setUploadError("")
-                  fileInputRef.current?.click()
-                }}
+                onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 className="w-full px-4 py-8 border-2 border-dashed border-border rounded-lg hover:border-primary/50 transition-colors flex flex-col items-center gap-2 disabled:opacity-50"
               >
@@ -417,11 +407,8 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
                 <span className="text-sm font-medium text-foreground">
                   {uploading ? "Uploading..." : "Click to select an image"}
                 </span>
-                <span className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</span>
+                <span className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</span>
               </button>
-                {uploadError && (
-                  <p className="text-xs text-red-500 mt-2">{uploadError}</p>
-                )}
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">Title (optional)</label>
@@ -457,6 +444,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
             motivation: goalToEdit.motivation,
             image: goalToEdit.image_url,
             target_hours: goalToEdit.target_hours,
+            target_date: goalToEdit.target_date || "",
           }}
           mode="edit"
         />
@@ -488,6 +476,19 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
                   />
                   <span className="capitalize">{selectedGoal.timeline} Goal</span>
                 </div>
+                {(() => {
+                  const deadlineInfo = getDeadlineInfo(selectedGoal.target_date, selectedGoal.timeline)
+                  return deadlineInfo ? (
+                    <div
+                      className={`mt-2 text-sm md:text-base font-semibold flex items-center gap-2 ${deadlineInfo.colorClass} ${
+                        deadlineInfo.shouldPulse ? "animate-pulse" : ""
+                      }`}
+                    >
+                      <span className="text-lg">{deadlineInfo.emoji}</span>
+                      <span>{deadlineInfo.text}</span>
+                    </div>
+                  ) : null
+                })()}
               </div>
               <button
                 onClick={() => setSelectedGoal(null)}

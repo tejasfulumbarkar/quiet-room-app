@@ -17,6 +17,7 @@ interface NewGoal {
   motivation: string
   target_hours: number
   image: string
+  target_date: string
 }
 
 interface GoalCreationWizardProps {
@@ -25,6 +26,25 @@ interface GoalCreationWizardProps {
   onCreateGoal?: (goal: NewGoal) => void
   initialData?: Partial<NewGoal>
   mode?: "create" | "edit"
+}
+
+const calculateTargetDate = (timeline: "weekly" | "monthly" | "yearly"): string => {
+  const now = new Date()
+  const targetDate = new Date()
+
+  switch (timeline) {
+    case "weekly":
+      targetDate.setDate(now.getDate() + 7)
+      break
+    case "monthly":
+      targetDate.setMonth(now.getMonth() + 1)
+      break
+    case "yearly":
+      targetDate.setFullYear(now.getFullYear() + 1)
+      break
+  }
+
+  return targetDate.toISOString()
 }
 
 export function GoalCreationWizard({
@@ -41,8 +61,10 @@ export function GoalCreationWizard({
     motivation: "",
     target_hours: 10,
     image: "",
+    target_date: calculateTargetDate("monthly"),
   })
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [hoursError, setHoursError] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const steps: WizardStep[] = [
@@ -61,16 +83,27 @@ export function GoalCreationWizard({
         motivation: initialData.motivation || "",
         target_hours: initialData.target_hours || 10,
         image: initialData.image || "",
+        target_date:
+          initialData.target_date ||
+          calculateTargetDate((initialData.category as "weekly" | "monthly" | "yearly") || "monthly"),
       })
       setImagePreview(initialData.image || null)
     }
   }, [initialData, isOpen])
 
   const handleNext = () => {
+    if (currentStep === 4 && hoursError) {
+      return
+    }
+
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1)
     } else {
-      onCreateGoal?.(newGoal)
+      const goalToCreate = {
+        ...newGoal,
+        target_date: calculateTargetDate(newGoal.category),
+      }
+      onCreateGoal?.(goalToCreate)
       onClose()
       resetWizard()
     }
@@ -126,18 +159,65 @@ export function GoalCreationWizard({
       motivation: "",
       target_hours: 10,
       image: "",
+      target_date: calculateTargetDate("monthly"),
     })
     setImagePreview(null)
-  }
-
-  const updateMilestone = (index: number, value: string) => {
-    const updated = [...newGoal.milestones]
-    updated[index] = value
-    setNewGoal({ ...newGoal, milestones: updated })
+    setHoursError("")
   }
 
   const calculateEstimatedXP = (hours: number): number => {
     return hours * 60 * 5
+  }
+
+  const getHourLimits = () => {
+    switch (newGoal.category) {
+      case "weekly":
+        return {
+          min: 1,
+          max: 120,
+          presets: [
+            { label: "Light Work", hours: 5, emoji: "🟢" },
+            { label: "Solid Work", hours: 15, emoji: "🟡" },
+            { label: "Hardcore", hours: 30, emoji: "🔴" },
+          ],
+        }
+      case "monthly":
+        return {
+          min: 5,
+          max: 500,
+          presets: [
+            { label: "Light Work", hours: 20, emoji: "🟢" },
+            { label: "Solid Work", hours: 50, emoji: "🟡" },
+            { label: "Hardcore", hours: 100, emoji: "🔴" },
+          ],
+        }
+      case "yearly":
+        return {
+          min: 10,
+          max: 4000,
+          presets: [
+            { label: "Light Work", hours: 200, emoji: "🟢" },
+            { label: "Solid Work", hours: 500, emoji: "🟡" },
+            { label: "Hardcore", hours: 1000, emoji: "🔴" },
+          ],
+        }
+    }
+  }
+
+  const validateHours = (hours: number): string => {
+    const limits = getHourLimits()
+    if (hours > limits.max) {
+      return "That's physically impossible. Go sleep."
+    }
+    if (hours < limits.min) {
+      return "Too small for a Goal. Add this as a Task instead."
+    }
+    return ""
+  }
+
+  const handleHoursChange = (hours: number) => {
+    setNewGoal({ ...newGoal, target_hours: hours })
+    setHoursError(validateHours(hours))
   }
 
   if (!isOpen) return null
@@ -188,7 +268,22 @@ export function GoalCreationWizard({
                 {(["weekly", "monthly", "yearly"] as const).map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => setNewGoal({ ...newGoal, category: cat })}
+                    onClick={() => {
+                      const limits =
+                        cat === "weekly"
+                          ? { min: 1, max: 120 }
+                          : cat === "monthly"
+                            ? { min: 5, max: 500 }
+                            : { min: 10, max: 4000 }
+                      const defaultHours = cat === "weekly" ? 5 : cat === "monthly" ? 20 : 200
+                      setNewGoal({
+                        ...newGoal,
+                        category: cat,
+                        target_hours: defaultHours,
+                        target_date: calculateTargetDate(cat),
+                      })
+                      setHoursError("")
+                    }}
                     className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
                       newGoal.category === cat
                         ? "border-primary bg-primary/10"
@@ -197,9 +292,9 @@ export function GoalCreationWizard({
                   >
                     <span className="font-semibold text-foreground capitalize">{cat} Goal</span>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {cat === "weekly" && "Achieve this within 7 days"}
-                      {cat === "monthly" && "Achieve this within 30 days"}
-                      {cat === "yearly" && "Achieve this within 365 days"}
+                      {cat === "weekly" && 'The "Sprint" - Achieve this within 7 days'}
+                      {cat === "monthly" && 'The "Marathon" - Achieve this within 30 days'}
+                      {cat === "yearly" && 'The "Vision" - Achieve this within 365 days'}
                     </p>
                   </button>
                 ))}
@@ -223,26 +318,22 @@ export function GoalCreationWizard({
               </div>
             )}
 
-            {/* Step 4 is now target hours */}
             {currentStep === 4 && (
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-foreground mb-2">Target Hours</label>
                 <div className="grid grid-cols-3 gap-3 mb-4">
-                  {[
-                    { label: "Light Work", hours: 5 },
-                    { label: "Solid Grind", hours: 10 },
-                    { label: "Hardcore", hours: 20 },
-                  ].map((preset) => (
+                  {getHourLimits().presets.map((preset) => (
                     <button
                       key={preset.hours}
-                      onClick={() => setNewGoal({ ...newGoal, target_hours: preset.hours })}
+                      onClick={() => handleHoursChange(preset.hours)}
                       className={`p-3 rounded-lg border-2 transition-all ${
                         newGoal.target_hours === preset.hours
                           ? "border-primary bg-primary/10"
                           : "border-border hover:border-primary/50 bg-muted/50"
                       }`}
                     >
-                      <span className="font-semibold text-foreground block">{preset.label}</span>
+                      <span className="text-xl mb-1 block">{preset.emoji}</span>
+                      <span className="font-semibold text-foreground block text-sm">{preset.label}</span>
                       <span className="text-xs text-muted-foreground block mt-1">{preset.hours} Hours</span>
                     </button>
                   ))}
@@ -251,12 +342,18 @@ export function GoalCreationWizard({
                   <label className="block text-sm text-muted-foreground mb-2">Or enter custom hours:</label>
                   <input
                     type="number"
-                    min="1"
-                    max="100"
+                    min={getHourLimits().min}
+                    max={getHourLimits().max}
                     value={newGoal.target_hours}
-                    onChange={(e) => setNewGoal({ ...newGoal, target_hours: Number.parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    onChange={(e) => handleHoursChange(Number.parseInt(e.target.value) || getHourLimits().min)}
+                    className={`w-full px-4 py-2 bg-muted border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                      hoursError ? "border-red-500" : "border-border"
+                    }`}
                   />
+                  {hoursError && <p className="text-sm text-red-500 mt-2 font-medium">{hoursError}</p>}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Range: {getHourLimits().min} - {getHourLimits().max} hours for {newGoal.category} goals
+                  </p>
                 </div>
                 <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
                   <p className="text-sm text-foreground font-medium">
@@ -267,13 +364,9 @@ export function GoalCreationWizard({
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Based on 5 XP per minute of focused work</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Tip: Be realistic! Each hour = 300 XP (60 min × 5 XP)
-                </p>
               </div>
             )}
 
-            {/* Step 5 is now image upload */}
             {currentStep === 5 && (
               <div>
                 <label className="block text-sm font-medium text-foreground mb-3">Upload Goal Image (Optional)</label>
@@ -323,7 +416,11 @@ export function GoalCreationWizard({
             </button>
             <button
               onClick={handleNext}
-              disabled={(currentStep === 1 && !newGoal.title) || (currentStep === 3 && !newGoal.motivation)}
+              disabled={
+                (currentStep === 1 && !newGoal.title) ||
+                (currentStep === 3 && !newGoal.motivation) ||
+                (currentStep === 4 && !!hoursError)
+              }
               className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {currentStep === steps.length ? (mode === "edit" ? "Update Goal" : "Create Goal") : "Next"}
