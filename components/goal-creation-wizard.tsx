@@ -4,6 +4,7 @@ import type React from "react"
 
 import { ChevronLeft, ChevronRight, Upload, X } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 interface WizardStep {
   step: number
@@ -66,6 +67,8 @@ export function GoalCreationWizard({
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [hoursError, setHoursError] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [imageUploadError, setImageUploadError] = useState<string>("")
+  const { toast } = useToast()
 
   const steps: WizardStep[] = [
     { step: 1, title: "What do you want to achieve?", description: "Be clear and specific" },
@@ -117,15 +120,44 @@ export function GoalCreationWizard({
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const result = reader.result as string
-        setImagePreview(result)
-        setNewGoal({ ...newGoal, image: result })
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+
+    setImageUploadError("")
+
+    const allowed = ["image/png", "image/jpeg", "image/jpg"]
+    if (!allowed.includes(file.type)) {
+      const msg = "Only PNG and JPG/JPEG images are allowed. GIFs are not supported."
+      toast({
+        title: "Unsupported file type",
+        description: msg,
+        variant: "destructive",
+      })
+      setImageUploadError(msg)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
     }
+
+    const MAX_BYTES = 5 * 1024 * 1024
+    if (file.size > MAX_BYTES) {
+      const msg = "Image must be 5 MB or smaller."
+      toast({
+        title: "File too large",
+        description: msg,
+        variant: "destructive",
+      })
+      setImageUploadError(msg)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const result = reader.result as string
+      setImagePreview(result)
+      setNewGoal({ ...newGoal, image: result })
+      setImageUploadError("")
+    }
+    reader.readAsDataURL(file)
   }
 
   const removeImage = () => {
@@ -381,10 +413,13 @@ export function GoalCreationWizard({
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept=".png,.jpg,.jpeg,image/png,image/jpeg"
                       onChange={handleImageUpload}
                       className="hidden"
                     />
+                    {imageUploadError && (
+                      <p className="text-sm text-red-500 mt-2">{imageUploadError}</p>
+                    )}
                   </div>
                 ) : (
                   <div className="relative rounded-lg overflow-hidden">

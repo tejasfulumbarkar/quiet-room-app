@@ -4,6 +4,7 @@ import type React from "react"
 
 import { Plus, ImageIcon, MoreVertical, Edit2, Trash2, X, Target, Zap } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
+import { useToast } from "@/hooks/use-toast"
 import { GoalCreationWizard } from "@/components/goal-creation-wizard"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
   const [imageTitle, setImageTitle] = useState("")
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string>("")
   const [showGoalMenu, setShowGoalMenu] = useState<string | null>(null)
   const [goalToEdit, setGoalToEdit] = useState<Goal | null>(null)
   const [isEditWizardOpen, setIsEditWizardOpen] = useState(false)
@@ -132,9 +134,43 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
     }
   }
 
+  const { toast } = useToast()
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // clear previous inline error
+    setUploadError("")
+
+    // Restrict to PNG / JPG / JPEG
+    const allowed = ["image/png", "image/jpeg", "image/jpg"]
+    if (!allowed.includes(file.type)) {
+      const msg = "Only PNG and JPG/JPEG images are allowed. GIFs are not supported."
+      toast({
+        title: "Unsupported file type",
+        description: msg,
+        variant: "destructive",
+      })
+      // set inline error and clear file input
+      setUploadError(msg)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+
+    // Enforce max size 5MB
+    const MAX_BYTES = 5 * 1024 * 1024
+    if (file.size > MAX_BYTES) {
+      const msg = "Image must be 5 MB or smaller."
+      toast({
+        title: "File too large",
+        description: msg,
+        variant: "destructive",
+      })
+      setUploadError(msg)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
 
     setUploading(true)
     const supabase = getSupabaseBrowserClient()
@@ -162,6 +198,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
         fetchVisionItems()
         setImageTitle("")
         setIsUploadOpen(false)
+        setUploadError("")
       }
       setUploading(false)
     }
@@ -397,7 +434,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Upload Image File</label>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+              <input ref={fileInputRef} type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={handleFileSelect} className="hidden" />
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
@@ -407,7 +444,10 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
                 <span className="text-sm font-medium text-foreground">
                   {uploading ? "Uploading..." : "Click to select an image"}
                 </span>
-                <span className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</span>
+                <span className="text-xs text-muted-foreground">PNG, JPG up to 5MB</span>
+                {uploadError && (
+                  <p className="text-sm text-red-500 mt-2">{uploadError}</p>
+                )}
               </button>
             </div>
             <div>
