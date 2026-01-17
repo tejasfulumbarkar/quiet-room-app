@@ -1,0 +1,27 @@
+{
+  "functions": {
+    "app/[[...route]]/route.ts": {
+      "excludeFiles": "public/**"
+    }
+  },
+  "routes": [
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json",
+      "headers": {
+        "Content-Type": "application/manifest+json"
+      }
+    },
+    {
+      "src": "/sw.js",
+      "dest": "/sw.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

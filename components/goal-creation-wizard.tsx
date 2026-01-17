@@ -1,0 +1,491 @@
+"use client"
+
+import type React from "react"
+
+import { ChevronLeft, ChevronRight, Upload, X } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
+
+interface WizardStep {
+  step: number
+  title: string
+  description: string
+}
+
+interface NewGoal {
+  title: string
+  category: "weekly" | "monthly" | "yearly"
+  motivation: string
+  target_hours: number
+  image: string
+  target_date: string
+}
+
+interface GoalCreationWizardProps {
+  isOpen: boolean
+  onClose: () => void
+  onCreateGoal?: (goal: NewGoal) => void
+  initialData?: Partial<NewGoal>
+  mode?: "create" | "edit"
+}
+
+const calculateTargetDate = (timeline: "weekly" | "monthly" | "yearly"): string => {
+  const now = new Date()
+  const targetDate = new Date()
+
+  switch (timeline) {
+    case "weekly":
+      targetDate.setDate(now.getDate() + 7)
+      break
+    case "monthly":
+      targetDate.setMonth(now.getMonth() + 1)
+      break
+    case "yearly":
+      targetDate.setFullYear(now.getFullYear() + 1)
+      break
+  }
+
+  return targetDate.toISOString()
+}
+
+export function GoalCreationWizard({
+  isOpen,
+  onClose,
+  onCreateGoal,
+  initialData,
+  mode = "create",
+}: GoalCreationWizardProps) {
+  const [currentStep, setCurrentStep] = useState(1)
+  const [newGoal, setNewGoal] = useState<NewGoal>({
+    title: "",
+    category: "monthly",
+    motivation: "",
+    target_hours: 10,
+    image: "",
+    target_date: calculateTargetDate("monthly"),
+  })
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [hoursError, setHoursError] = useState<string>("")
+  const [hoursInput, setHoursInput] = useState<string>(String(10))
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [imageUploadError, setImageUploadError] = useState<string>("")
+  const { toast } = useToast()
+
+  const steps: WizardStep[] = [
+    { step: 1, title: "What do you want to achieve?", description: "Be clear and specific" },
+    { step: 2, title: "When do you want to complete it?", description: "Choose your timeline" },
+    { step: 3, title: "Why does this matter?", description: "Connect emotionally" },
+    { step: 4, title: "How much time will this take?", description: "Set your target hours" },
+    { step: 5, title: "Pick an inspiring image", description: "Make it visual" },
+  ]
+
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setNewGoal({
+        title: initialData.title || "",
+        category: (initialData.category as "weekly" | "monthly" | "yearly") || "monthly",
+        motivation: initialData.motivation || "",
+        target_hours: initialData.target_hours || 10,
+        image: initialData.image || "",
+        target_date:
+          initialData.target_date ||
+          calculateTargetDate((initialData.category as "weekly" | "monthly" | "yearly") || "monthly"),
+      })
+      setImagePreview(initialData.image || null)
+      setHoursInput(String(initialData.target_hours ?? 10))
+    }
+  }, [initialData, isOpen])
+
+  useEffect(() => {
+    setHoursInput(String(newGoal.target_hours ?? 0))
+  }, [newGoal.target_hours])
+
+  const handleNext = () => {
+    
+
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1)
+    } else {
+      const goalToCreate = {
+        ...newGoal,
+        target_date: calculateTargetDate(newGoal.category),
+      }
+      onCreateGoal?.(goalToCreate)
+      onClose()
+      resetWizard()
+    }
+  }
+
+  const handlePrev = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImageUploadError("")
+
+    const allowed = ["image/png", "image/jpeg", "image/jpg"]
+    if (!allowed.includes(file.type)) {
+      const msg = "Only PNG and JPG/JPEG images are allowed. GIFs are not supported."
+      toast({
+        title: "Unsupported file type",
+        description: msg,
+        variant: "destructive",
+      })
+      setImageUploadError(msg)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+
+    const MAX_BYTES = 5 * 1024 * 1024
+    if (file.size > MAX_BYTES) {
+      const msg = "Image must be 5 MB or smaller."
+      toast({
+        title: "File too large",
+        description: msg,
+        variant: "destructive",
+      })
+      setImageUploadError(msg)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const result = reader.result as string
+      setImagePreview(result)
+      setNewGoal({ ...newGoal, image: result })
+      setImageUploadError("")
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    setImagePreview(null)
+    setNewGoal({ ...newGoal, image: "" })
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const generateGradient = () => {
+    const gradients = [
+      "from-purple-500 via-purple-600 to-pink-600",
+      "from-blue-500 via-indigo-600 to-purple-600",
+      "from-green-500 via-teal-600 to-cyan-600",
+      "from-orange-500 via-red-500 to-pink-600",
+      "from-indigo-500 via-purple-600 to-pink-600",
+      "from-cyan-500 via-blue-600 to-indigo-600",
+      "from-pink-500 via-purple-600 to-indigo-600",
+      "from-emerald-500 via-green-600 to-teal-600",
+    ]
+    const hash = newGoal.title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    return gradients[hash % gradients.length]
+  }
+
+  const resetWizard = () => {
+    setCurrentStep(1)
+    setNewGoal({
+      title: "",
+      category: "monthly",
+      motivation: "",
+      target_hours: 10,
+      image: "",
+      target_date: calculateTargetDate("monthly"),
+    })
+    setImagePreview(null)
+    setHoursError("")
+  }
+
+  const calculateEstimatedXP = (hours: number): number => {
+    return hours * 60 * 5
+  }
+
+  const getHourLimits = () => {
+    switch (newGoal.category) {
+      case "weekly":
+        return {
+          min: 1,
+          max: 120,
+          presets: [
+            { label: "Light Work", hours: 5, emoji: "🟢" },
+            { label: "Solid Work", hours: 15, emoji: "🟡" },
+            { label: "Hardcore", hours: 30, emoji: "🔴" },
+          ],
+        }
+      case "monthly":
+        return {
+          min: 5,
+          max: 500,
+          presets: [
+            { label: "Light Work", hours: 20, emoji: "🟢" },
+            { label: "Solid Work", hours: 50, emoji: "🟡" },
+            { label: "Hardcore", hours: 100, emoji: "🔴" },
+          ],
+        }
+      case "yearly":
+        return {
+          min: 10,
+          max: 4000,
+          presets: [
+            { label: "Light Work", hours: 200, emoji: "🟢" },
+            { label: "Solid Work", hours: 500, emoji: "🟡" },
+            { label: "Hardcore", hours: 1000, emoji: "🔴" },
+          ],
+        }
+    }
+  }
+
+  const validateHours = (hours: number): string => {
+    const limits = getHourLimits()
+    if (hours > limits.max) {
+      return "That's physically impossible. Go sleep."
+    }
+    if (hours < limits.min) {
+      return "Too small for a Goal. Add this as a Task instead."
+    }
+    return ""
+  }
+
+  const handleHoursChange = (hours: number) => {
+    setNewGoal({ ...newGoal, target_hours: hours })
+    setHoursError(validateHours(hours))
+  }
+
+  const commitHoursInput = () => {
+    const parsed = Number(hoursInput)
+    const hours = Number.isNaN(parsed) ? 0 : parsed
+    handleHoursChange(hours)
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in">
+      <div className="bg-card border border-border rounded-2xl max-w-2xl w-full shadow-2xl shadow-primary/20">
+        {/* Progress Bar */}
+        <div className="h-1 bg-muted flex">
+          {steps.map((_, index) => (
+            <div
+              key={index}
+              className={`flex-1 transition-all ${index < currentStep ? "bg-primary" : "bg-muted"}`}
+            ></div>
+          ))}
+        </div>
+
+        <div className="p-8">
+          {/* Step Header */}
+          <div className="mb-8">
+            <p className="text-sm text-muted-foreground mb-2">
+              Step {currentStep} of {steps.length}
+            </p>
+            <h2 className="text-2xl font-bold text-foreground mb-1">{steps[currentStep - 1].title}</h2>
+            <p className="text-muted-foreground">{steps[currentStep - 1].description}</p>
+          </div>
+
+          {/* Step Content */}
+          <div className="mb-8 space-y-4">
+            {currentStep === 1 && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Goal Title</label>
+                <input
+                  type="text"
+                  value={newGoal.title}
+                  onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
+                  placeholder="e.g., Build a portfolio website"
+                  maxLength={60}
+                  className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <p className="text-xs text-muted-foreground mt-1 text-right">{newGoal.title.length}/60 characters</p>
+              </div>
+            )}
+
+            {currentStep === 2 && (
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-foreground mb-2">Timeline</label>
+                {(["weekly", "monthly", "yearly"] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      const limits =
+                        cat === "weekly"
+                          ? { min: 1, max: 120 }
+                          : cat === "monthly"
+                            ? { min: 5, max: 500 }
+                            : { min: 10, max: 4000 }
+                      const defaultHours = cat === "weekly" ? 5 : cat === "monthly" ? 20 : 200
+                      setNewGoal({
+                        ...newGoal,
+                        category: cat,
+                        target_hours: defaultHours,
+                        target_date: calculateTargetDate(cat),
+                      })
+                      setHoursError("")
+                    }}
+                    className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
+                      newGoal.category === cat
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50 bg-muted/50"
+                    }`}
+                  >
+                    <span className="font-semibold text-foreground capitalize">{cat} Goal</span>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {cat === "weekly" && 'The "Sprint" - Achieve this within 7 days'}
+                      {cat === "monthly" && 'The "Marathon" - Achieve this within 30 days'}
+                      {cat === "yearly" && 'The "Vision" - Achieve this within 365 days'}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Why does this matter to you?</label>
+                <textarea
+                  value={newGoal.motivation}
+                  onChange={(e) => setNewGoal({ ...newGoal, motivation: e.target.value })}
+                  placeholder="Write what this goal means to you..."
+                  rows={4}
+                  maxLength={300}
+                  className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1 text-right">
+                  {newGoal.motivation.length}/300 characters
+                </p>
+              </div>
+            )}
+
+            {currentStep === 4 && (
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-foreground mb-2">Target Hours</label>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {getHourLimits().presets.map((preset) => (
+                    <button
+                      key={preset.hours}
+                      onClick={() => handleHoursChange(preset.hours)}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        newGoal.target_hours === preset.hours
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50 bg-muted/50"
+                      }`}
+                    >
+                      <span className="text-xl mb-1 block">{preset.emoji}</span>
+                      <span className="font-semibold text-foreground block text-sm">{preset.label}</span>
+                      <span className="text-xs text-muted-foreground block mt-1">{preset.hours} Hours</span>
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-2">Or enter custom hours:</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={getHourLimits().max}
+                    value={hoursInput}
+                    onChange={(e) => setHoursInput(e.target.value)}
+                    onBlur={commitHoursInput}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        commitHoursInput()
+                      }
+                    }}
+                    className={`w-full px-4 py-2 bg-muted border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                      hoursError ? "border-red-500" : "border-border"
+                    }`}
+                  />
+                  {( ( !Number.isNaN(Number(hoursInput)) && (Number(hoursInput) < getHourLimits().min || Number(hoursInput) > getHourLimits().max) ) || hoursError ) && (
+                    <p className="text-sm text-red-500 mt-2 font-medium">
+                      { !Number.isNaN(Number(hoursInput)) && (Number(hoursInput) < getHourLimits().min || Number(hoursInput) > getHourLimits().max)
+                        ? validateHours(Number(hoursInput))
+                        : hoursError}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Range: {getHourLimits().min} - {getHourLimits().max} hours for {newGoal.category} goals
+                  </p>
+                </div>
+                <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-foreground font-medium">
+                    Estimated XP Value:{" "}
+                    <span className="text-primary font-bold">
+                      {calculateEstimatedXP(Number.isNaN(Number(hoursInput)) ? newGoal.target_hours : Number(hoursInput)).toLocaleString()}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Based on 5 XP per minute of focused work</p>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 5 && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-3">Upload Goal Image (Optional)</label>
+                {!imagePreview ? (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-sm text-foreground font-medium mb-1">Click to upload an image</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    {imageUploadError && (
+                      <p className="text-sm text-red-500 mt-2">{imageUploadError}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden">
+                    <img
+                      src={imagePreview || "/placeholder.svg"}
+                      alt="Goal preview"
+                      className="w-full h-48 object-cover"
+                    />
+                    <button
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3 justify-between">
+            <button
+              onClick={currentStep === 1 ? onClose : handlePrev}
+              className="flex items-center gap-2 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-muted/50 transition-colors font-medium"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              {currentStep === 1 ? "Cancel" : "Back"}
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={
+                (currentStep === 1 && !newGoal.title) ||
+                (currentStep === 3 && !newGoal.motivation) ||
+                (currentStep === 4 && (Number.isNaN(Number(hoursInput)) || Number(Number(hoursInput)) < getHourLimits().min))
+              }
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {currentStep === steps.length ? (mode === "edit" ? "Update Goal" : "Create Goal") : "Next"}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

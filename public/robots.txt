@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# PWA files
+Allow: /manifest.json
+Allow: /sw.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.svg
+
+# Sitemap
+Sitemap: https://quietroom.in/sitemap.xml
