@@ -1,17 +1,8 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-export default async function proxy(request: NextRequest) {
-  const devBypass = request.cookies.get("dev-bypass")
-  const isDev = process.env.NODE_ENV === "development"
-
-  if (isDev && devBypass?.value === "true") {
-    return NextResponse.next()
-  }
-
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+export default async function middleware(request: NextRequest) {
+  const supabaseResponse = NextResponse.next()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,40 +13,35 @@ export default async function proxy(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options)
           })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
         },
       },
-    },
+    }
   )
 
-  // Refresh session if expired
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // 🔥 FIX: Skip auth refresh on auth routes to prevent "refresh token not found"
+  let user = null
+
+  if (!request.nextUrl.pathname.startsWith("/auth")) {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  }
 
   const publicRoutes = ["/", "/auth/login", "/auth/signup", "/auth/callback"]
-  const isPublicRoute = publicRoutes.some((route) => request.nextUrl.pathname === route)
+  const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname)
 
   if (!user && !isPublicRoute && !request.nextUrl.pathname.startsWith("/auth")) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
   if (user && request.nextUrl.pathname.startsWith("/auth")) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/dashboard"
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
   if (user && request.nextUrl.pathname === "/") {
-    const url = request.nextUrl.clone()
-    url.pathname = "/dashboard"
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
   return supabaseResponse

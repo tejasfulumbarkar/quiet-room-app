@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { Play, Volume2, XCircle, CheckCircle2, AlertCircle, Timer, Target, Send } from "lucide-react"
+import { Play, Pause, Volume2, XCircle, CheckCircle2, AlertCircle, Timer, Target, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -60,6 +60,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
   const [minutes, setMinutes] = useState(25)
   const [seconds, setSeconds] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [pausedTime, setPausedTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [goals, setGoals] = useState<Goal[]>([])
   const [selectedGoal, setSelectedGoal] = useState<string | "none">("none")
@@ -146,6 +148,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     setTimeLeft(minutes * 60)
     setTimerStartTimestamp(Date.now())
     setIsRunning(true)
+    setIsPaused(false)
+    setPausedTime(0)
     setIsFullscreen(true)
     setShowQuickStartModal(false)
 
@@ -178,6 +182,29 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     setSessionStartTime(Date.now())
   }
 
+  const handlePause = () => {
+    if (!isPaused && timerStartTimestamp) {
+      // Calculate elapsed time when pausing
+      const now = Date.now()
+      const elapsed = Math.floor((now - timerStartTimestamp) / 1000)
+      setPausedTime(elapsed)
+      setIsPaused(true)
+      setIsRunning(false)
+      releaseWakeLock()
+    }
+  }
+
+  const handleResume = async () => {
+    if (isPaused) {
+      // Adjust timer start timestamp to account for paused time
+      const now = Date.now()
+      setTimerStartTimestamp(now - (pausedTime * 1000))
+      setIsPaused(false)
+      setIsRunning(true)
+      await requestWakeLock()
+    }
+  }
+
   const handleGiveUp = () => {
     setShowGiveUpConfirm(true)
   }
@@ -186,6 +213,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     console.log(" Give up confirmed")
     setIsFullscreen(false)
     setIsRunning(false)
+    setIsPaused(false)
+    setPausedTime(0)
     setShowGiveUpConfirm(false)
     setSessionData(null)
 
@@ -356,7 +385,7 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
   useEffect(() => {
     let interval: NodeJS.Timeout
 
-    if (isRunning && timerStartTimestamp) {
+    if (isRunning && timerStartTimestamp && !isPaused) {
       interval = setInterval(() => {
         const now = Date.now()
         const elapsed = Math.floor((now - timerStartTimestamp) / 1000)
@@ -368,21 +397,27 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
           setTimeLeft(remaining)
         }
       }, 100) // Check every 100ms for smoother updates
+    } else if (isPaused) {
+      // When paused, maintain the current time left
+      const remaining = initialMinutes * 60 - pausedTime
+      setTimeLeft(Math.max(0, remaining))
     }
 
     return () => clearInterval(interval)
-  }, [isRunning, timerStartTimestamp, initialMinutes])
+  }, [isRunning, timerStartTimestamp, initialMinutes, isPaused, pausedTime])
 
   useEffect(() => {
-    if (timeLeft === 0 && isRunning) {
+    if (timeLeft === 0 && (isRunning || isPaused)) {
       handleTimerComplete()
     }
-  }, [timeLeft, isRunning])
+  }, [timeLeft, isRunning, isPaused])
 
   const handleTimerComplete = async () => {
     SoundEffects.timerComplete()
 
     setIsRunning(false)
+    setIsPaused(false)
+    setPausedTime(0)
     setIsFullscreen(false)
 
     releaseWakeLock()
@@ -965,24 +1000,45 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
                     <span className="font-semibold text-amber-300">+{Math.floor(initialMinutes * 5)} XP</span>
                   </div>
 
-                  {!isRunning ? (
+                  {!isRunning && !isPaused ? (
                     <Button
                       size="lg"
                       onClick={startFocus}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
                     >
-                      <Play className="w-5 h-5 mr-2" />
-                      Start focus
+                      <Play className="w-4 h-4 mr-2" />
+                      Start Focus
                     </Button>
                   ) : (
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onClick={handleGiveUp}
-                      className="px-8 border-red-500/50 hover:bg-red-500/10 hover:border-red-500 text-red-400 hover:text-red-300 bg-transparent"
-                    >
-                      Give Up
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      {isPaused ? (
+                        <Button
+                          size="lg"
+                          onClick={handleResume}
+                          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Resume
+                        </Button>
+                      ) : (
+                        <Button
+                          size="lg"
+                          onClick={handlePause}
+                          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                        >
+                          <Pause className="w-4 h-4 mr-2" />
+                          Pause
+                        </Button>
+                      )}
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        onClick={handleGiveUp}
+                        className="px-6 py-3 border-purple-500/30 hover:bg-purple-500/10 text-black hover:text-white hover:border-purple-500/50"
+                      >
+                        Give Up
+                      </Button>
+                    </div>
                   )}
                 </div>
 
@@ -1209,14 +1265,35 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
                   </div>
                 </div>
 
-                <Button
-                  onClick={handleGiveUp}
-                  variant="outline"
-                  size="lg"
-                  className="text-lg px-10 py-6 mt-8 border-red-500/50 hover:bg-red-500/10 hover:border-red-500 text-red-400 hover:text-red-300 bg-transparent"
-                >
-                  Give Up
-                </Button>
+                <div className="flex items-center gap-4 mt-8">
+                  {isPaused ? (
+                    <Button
+                      onClick={handleResume}
+                      size="lg"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Resume
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handlePause}
+                      size="lg"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                    >
+                      <Pause className="w-4 h-4 mr-2" />
+                      Pause
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleGiveUp}
+                    variant="outline"
+                    size="lg"
+                    className="px-6 py-3 border-purple-500/30 hover:bg-purple-500/10 text-black hover:text-white hover:border-purple-500/50"
+                  >
+                    Give Up
+                  </Button>
+                </div>
               </div>
             </div>
           </div>,
