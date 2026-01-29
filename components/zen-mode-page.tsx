@@ -108,6 +108,7 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
   const [showQuickStartModal, setShowQuickStartModal] = useState(true) // Added state for QuickStartModal
 
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+  const originalTitleRef = useRef<string>("")
 
   const requestWakeLock = async () => {
     try {
@@ -127,6 +128,12 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
         console.log(" Screen Wake Lock released")
       })
     }
+  }
+
+  const formatTime = (time: number) => {
+    const mins = Math.floor(time / 60)
+    const secs = time % 60
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
   }
 
   useEffect(() => {
@@ -405,6 +412,32 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
 
     return () => clearInterval(interval)
   }, [isRunning, timerStartTimestamp, initialMinutes, isPaused, pausedTime])
+
+  // Update document title with timer countdown
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    // Save original title on first run
+    if (!originalTitleRef.current) {
+      originalTitleRef.current = document.title
+    }
+
+    if (isRunning || isPaused) {
+      const formattedTime = formatTime(timeLeft)
+      const status = isPaused ? "⏸️" : "🧘"
+      document.title = `${status} ${formattedTime} - Zen Mode`
+    } else {
+      // Restore original title when timer stops
+      document.title = originalTitleRef.current
+    }
+
+    // Cleanup function to restore title when component unmounts
+    return () => {
+      if (originalTitleRef.current) {
+        document.title = originalTitleRef.current
+      }
+    }
+  }, [timeLeft, isRunning, isPaused])
 
   useEffect(() => {
     if (timeLeft === 0 && (isRunning || isPaused)) {
@@ -778,12 +811,6 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
 
     setDiagnosisText("")
     setSessionData(null)
-  }
-
-  const formatTime = (time: number) => {
-    const mins = Math.floor(time / 60)
-    const secs = time % 60
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
   }
 
   const startFocus = async () => {
