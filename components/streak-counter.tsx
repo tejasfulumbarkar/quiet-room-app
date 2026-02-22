@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useDataRefresh } from "@/contexts/data-refresh-context"
+import Lottie from "lottie-react"
+import flameAnimation from "@/public/images/flame_animation.json"
 
 interface StreakCounterProps {
   userId: string
@@ -73,63 +75,9 @@ export function StreakCounter({ userId }: StreakCounterProps) {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-950/30 rounded-full border border-purple-500/30 hover:bg-purple-900/50 hover:border-purple-400 transition-all cursor-pointer group">
-      <div className="relative w-full h-full flex items-end justify-center">
-          {/* Inner Glow / Core */}
-          <div className="absolute w-4 h-6 bg-cyan-400 rounded-full blur-[2px] opacity-80 animate-pulse translate-y-1"></div>
-          
-          {/* Main Flame Body */}
-          <svg 
-            viewBox="0 0 100 120" 
-            className="w-full h-full drop-shadow-[0_0_12px_rgba(168,85,247,0.9)]"
-          >
-            <defs>
-              <linearGradient id="flameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#A855F7" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#7E22CE" />
-                <stop offset="100%" stopColor="#2E1065" />
-              </linearGradient>
-            </defs>
-            
-            {/* Outer Flame */}
-            <path 
-              className="flame-layer-1"
-              fill="url(#flameGradient)"
-              d="M50 0C50 0 85 40 85 75C85 110 50 120 50 120C50 120 15 110 15 75C15 40 50 0 50 0Z"
-            >
-              <animate 
-                attributeName="d" 
-                dur="1.5s" 
-                repeatCount="indefinite"
-                values="
-                  M50 0C50 0 85 40 85 75C85 110 50 120 50 120C50 120 15 110 15 75C15 40 50 0 50 0Z;
-                  M50 5C50 5 80 45 80 75C80 105 50 115 50 115C50 115 20 105 20 75C20 45 50 5 50 5Z;
-                  M50 0C50 0 85 40 85 75C85 110 50 120 50 120C50 120 15 110 15 75C15 40 50 0 50 0Z"
-              />
-            </path>
-
-            {/* Core Flicker */}
-            <path 
-              fill="#22D3EE"
-              opacity="0.6"
-              d="M50 40C50 40 70 65 70 85C70 105 50 110 50 110C50 110 30 105 30 85C30 65 50 40 50 40Z"
-            >
-              <animate 
-                attributeName="opacity" 
-                dur="0.8s" 
-                repeatCount="indefinite"
-                values="0.4; 0.8; 0.4"
-              />
-              <animateTransform 
-                attributeName="transform"
-                type="scale"
-                dur="0.5s"
-                repeatCount="indefinite"
-                values="1; 1.05; 1"
-                additive="sum"
-              />
-            </path>
-          </svg>
-        </div>
+      <div className="w-7 h-7 shrink-0 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">
+        <Lottie animationData={flameAnimation} loop autoplay />
+      </div>
       <div className="flex items-center gap-1">
         <span className="text-sm md:text-base font-bold text-white">{loading ? "—" : streak}</span>
         <span className="text-xs text-white/70">day{streak !== 1 ? "s" : ""}</span>

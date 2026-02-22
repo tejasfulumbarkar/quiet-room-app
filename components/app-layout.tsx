@@ -21,6 +21,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { getLevelInfo } from "@/lib/leveling-system"
 import { Button } from "@/components/ui/button"
+import Lottie from "lottie-react"
+import flameAnimation from "@/public/images/flame_animation.json"
 
 const NavItem = memo(({ item, isActive, onClick }: any) => {
   const Icon = item.icon
@@ -479,12 +481,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-4">
               {/* Streak Badge with Video */}
               <div className="flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
+                <div className="w-6 h-6 md:w-7 md:h-7 shrink-0 relative overflow-visible">
+                  <div className="absolute inset-0 scale-125 origin-center">
+                    <Lottie animationData={flameAnimation} loop autoplay />
+                  </div>
+                </div>
                 <video
                   autoPlay
                   loop
                   muted
                   playsInline
-                  className="w-6 h-6 md:w-7 md:h-7"
+                  className="hidden"
                   style={{ objectFit: "contain" }}
                 >
                   <source src="/images/streakflame.webm" type="video/webm" />

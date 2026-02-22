@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Flame } from "lucide-react"
+import Lottie from "lottie-react"
+import flameAnimation from "@/public/images/flame_animation.json"
 
 interface StreakDisplayProps {
   userId?: string
@@ -45,12 +46,12 @@ export function StreakDisplay({ userId }: StreakDisplayProps) {
 
   return (
     <div className="flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-950/30 px-4 py-2 transition-all hover:border-purple-500/50 hover:bg-purple-950/50">
-      {/* Placeholder icon */}
-      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
-        <Flame className="h-4 w-4 text-white" />
+      <div className="h-6 w-6 shrink-0 relative overflow-visible">
+        <div className="absolute inset-0 scale-200 origin-center">
+          <Lottie animationData={flameAnimation} loop autoplay />
+        </div>
       </div>
 
-      {/* Streak count */}
       <span className="text-sm font-medium text-purple-200">
         {streakCount} {streakCount === 1 ? "day" : "days"}
       </span>
