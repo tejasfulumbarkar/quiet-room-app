@@ -75,6 +75,12 @@ export default function LandingPage() {
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
               Features
             </a>
+            <Link
+              href="/why-quiet-room-exists"
+              className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+            >
+              Why Quiet Room Exists
+            </Link>
             <a
               href="#how-it-works"
               className="text-muted-foreground hover:text-foreground transition-colors font-medium"
@@ -98,82 +104,134 @@ export default function LandingPage() {
               Enter the Game
             </Link>
           </div>
-          {/* Mobile CTA button */}
-          <Link
-            href="/auth/login"
-            className="md:hidden px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-bold text-sm hover:shadow-lg hover:shadow-primary/50 transition-all"
-          >
-            Join
-          </Link>
+          {/* Mobile navigation */}
+          <div className="md:hidden flex items-center gap-3">
+            <Link
+              href="/why-quiet-room-exists"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+            >
+              Why Quiet Room Exists
+            </Link>
+            <Link
+              href="/auth/login"
+              className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-bold text-sm hover:shadow-lg hover:shadow-primary/50 transition-all"
+            >
+              Join
+            </Link>
+          </div>
         </nav>
       </header>
 
-      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
-        <div className="container mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-primary/10 border border-primary/30 rounded-full mb-6 md:mb-8">
-            <Zap className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-            <span className="text-xs md:text-sm font-semibold text-primary">
-              Turn Productivity Into An Epic Adventure
-            </span>
+      <section className="relative overflow-hidden pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
+        <div className="pointer-events-none absolute -left-20 top-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl animate-blob" />
+        <div className="pointer-events-none absolute -right-20 top-28 h-80 w-80 rounded-full bg-purple-500/20 blur-3xl animate-blob animation-delay-2000" />
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-0 h-52 w-[28rem] rounded-full bg-primary/10 blur-3xl animate-blob animation-delay-4000" />
+
+        <div className="container mx-auto relative">
+          <div className="hidden xl:block absolute left-0 top-24 z-10">
+            <div className="w-56 rounded-2xl border border-primary/30 bg-card/80 backdrop-blur-sm p-4 shadow-lg shadow-primary/10 animate-pulse">
+              <div className="flex items-center gap-2 mb-3">
+                <Timer className="w-4 h-4 text-primary" />
+                <span className="text-xs uppercase tracking-wide text-primary font-semibold">Live Focus</span>
+              </div>
+              <p className="text-2xl font-bold text-slate-200">02:40:18</p>
+              <p className="text-xs text-muted-foreground mt-1">Session streak in progress</p>
+              <div className="mt-4 h-1.5 w-full rounded-full bg-primary/20 overflow-hidden">
+                <div className="h-full w-2/3 bg-gradient-to-r from-primary to-purple-400 animate-shimmer" />
+              </div>
+            </div>
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 text-gray-400">
-            A System Where 
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-primary">
-              effort is the score.
-            </span>
-          </h1>
-
-          <p className="text-base md:text-xl text-muted-foreground mb-8 md:mb-10 max-w-3xl mx-auto text-balance px-4">
-Quiet Room tracks real effort using a calm, gamified system built for focus, not dopamine.          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-12 md:mb-16 px-4">
-            <Link
-              href="/auth/login"
-              onClick={() => {
-                try {
-                  primeAudio("entrytrim")
-                } catch (e) {
-                  /* ignore */
-                }
-              }}
-              className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-bold text-base md:text-lg hover:shadow-xl hover:shadow-primary/50 transition-all hover:scale-105 flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4 md:w-5 md:h-5" />
-              Join the System
-            </Link>
-            <InstallAppButton />
-            <a
-              href="#features"
-              className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-card border-2 border-border text-foreground rounded-xl font-bold text-base md:text-lg hover:border-primary/50 transition-all flex items-center justify-center gap-2"
-            >
-              Explore Features
-              <Zap className="w-4 h-4 md:w-5 md:h-5" />
-            </a>
+          <div className="hidden xl:block absolute right-0 top-24 z-10">
+            <div className="w-56 rounded-2xl border border-primary/30 bg-card/80 backdrop-blur-sm p-4 shadow-lg shadow-primary/10">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="w-4 h-4 text-primary" />
+                <span className="text-xs uppercase tracking-wide text-primary font-semibold">Today&apos;s Gains</span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Focus XP</span>
+                  <span className="font-semibold text-slate-200">+185</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Deep Sessions</span>
+                  <span className="font-semibold text-slate-200">4</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Aura Earned</span>
+                  <span className="font-semibold text-slate-200">+62</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <section className="py-12 md:py-20 px-4">
+          <div className="text-center max-w-4xl mx-auto relative z-20">
+            <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-primary/10 border border-primary/30 rounded-full mb-6 md:mb-8">
+              {/* <Zap className="w-3 h-3 md:w-4 md:h-4 text-primary" /> */}
+              <span className="text-xs md:text-sm font-semibold text-primary">
+                Made for Students , founders & developers 
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 text-gray-400">
+              A System Where
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-primary">
+                effort is the score.
+              </span>
+            </h1>
+
+            <p className="text-base md:text-xl text-muted-foreground mb-8 md:mb-10 max-w-3xl mx-auto text-balance px-4">
+              Quiet Room tracks real effort using a calm, gamified system built for focus, not dopamine.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-12 md:mb-16 px-4">
+              <Link
+                href="/auth/login"
+                onClick={() => {
+                  try {
+                    primeAudio("entrytrim")
+                  } catch (e) {
+                    /* ignore */
+                  }
+                }}
+                className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-bold text-base md:text-lg hover:shadow-xl hover:shadow-primary/50 transition-all hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <Play className="w-4 h-4 md:w-5 md:h-5" />
+                Join the System
+              </Link>
+              <InstallAppButton />
+              <a
+                href="#meet-assistant"
+                className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-card border-2 border-border text-foreground rounded-xl font-bold text-base md:text-lg hover:border-primary/50 transition-all flex items-center justify-center gap-2"
+              >
+                Explore Features
+                <Zap className="w-4 h-4 md:w-5 md:h-5" />
+              </a>
+            </div>
+          </div>
+
+          <section className="py-12 md:py-20 px-4 relative z-20">
             <div className="max-w-5xl mx-auto">
               <div className="relative group">
-                <div className="absolute -inset-1  rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                  <div className="relative p-[8px] rounded-xl bg-gradient-to-br from-slate-600 via-slate-200 to-slate-700 shadow-2xl ring-1 ring-white/10">
-                    <div className="rounded-lg bg-gray-900 border border-slate-700/50 overflow-hidden relative" style={{borderColor: 'oklch(92.9% 0.013 255.508)'}}>
-                      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none z-10"></div>
+                <div className="absolute -inset-1 rounded-3xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                <div className="relative p-[8px] rounded-xl bg-gradient-to-br from-slate-600 via-slate-200 to-slate-700 shadow-2xl ring-1 ring-white/10">
+                  <div className="rounded-lg bg-gray-900 border border-slate-700/50 overflow-hidden relative" style={{ borderColor: "oklch(92.9% 0.013 255.508)" }}>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none z-10"></div>
 
-                      <video
-                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/landingpagedashboard-kPh30tYybsBF1ifGMYccU5prt93Qsf.mp4"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-auto"
-                      />
+                    <video
+                      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/landingpagedashboard-kPh30tYybsBF1ifGMYccU5prt93Qsf.mp4"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-auto"
+                    />
 
-                      {/* Sparkles overlay: captures mousemove within this video container */}
-                      <HeroSparkles />
-                    </div>
+                    {/* Sparkles overlay: captures mousemove within this video container */}
+                    <HeroSparkles />
                   </div>
+                </div>
               </div>
             </div>
           </section>
@@ -181,7 +239,7 @@ Quiet Room tracks real effort using a calm, gamified system built for focus, not
       </section>
 
       {/* Q Terminal Demo Section */}
-      <section className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-background to-card/30">
+      <section id="meet-assistant" className="py-20 md:py-32 px-4 md:px-6 bg-gradient-to-b from-background to-card/30">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -545,7 +603,7 @@ Quiet Room tracks real effort using a calm, gamified system built for focus, not
                   href="mailto:quietroom2025@gmail.com"
                   className="text-muted-foreground hover:text-foreground transition-colors text-sm block"
                 >
-                  quietroom2025@gmail.com
+                  support@quietroom.in
                 </a>
               </div>
             </div>
@@ -560,14 +618,26 @@ Quiet Room tracks real effort using a calm, gamified system built for focus, not
                 >
                   PRIVACY POLICY
                 </a>
+                <a
+                  href="/terms-of-service"
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm block"
+                >
+                  TERMS OF SERVICE
+                </a>
               </div>
             </div>
           </div>
 
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-muted-foreground text-xs">© 2025 QUIET ROOM HQ. ALL RIGHTS RESERVED.</p>
-            <p className="text-muted-foreground text-xs">DESIGNED FOR PEAK PERFORMANCE.</p>
+            <p className="text-muted-foreground text-xs">© 2026 QUIET ROOM . ALL RIGHTS RESERVED.</p>
+            <a
+                  href="https://www.linkedin.com/in/tejasfulumbarkar88/"
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm block"
+                >
+                  Built by Tejas
+                </a>
+            {/* <p className="text-muted-foreground text-xs">Built by Tejas Fulumbarkar</p> */}
           </div>
         </div>
       </footer>

@@ -29,7 +29,15 @@ export default async function middleware(request: NextRequest) {
     user = data.user
   }
 
-  const publicRoutes = ["/", "/auth/login", "/auth/signup", "/auth/callback"]
+  const publicRoutes = [
+    "/",
+    "/why-quiet-room-exists",
+    "/privacy",
+    "/terms-of-service",
+    "/auth/login",
+    "/auth/signup",
+    "/auth/callback",
+  ]
   const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname)
 
   if (!user && !isPublicRoute && !request.nextUrl.pathname.startsWith("/auth")) {

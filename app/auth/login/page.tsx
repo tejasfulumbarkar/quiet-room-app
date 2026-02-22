@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createTestUserBypass } from "../actions"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -90,7 +91,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
       <div className="fixed inset-0 bg-black -z-10" />
 
-      <div className="hidden md:block absolute top-8 left-8 text-xs font-mono text-muted-foreground/60 space-y-1">
+      {/* <div className="hidden md:block absolute top-8 left-8 text-xs font-mono text-muted-foreground/60 space-y-1">
         <div>PLAYER_STABLE</div>
         <div>REPUTATION_LEVEL: MAX</div>
       </div>
@@ -98,7 +99,7 @@ export default function LoginPage() {
       <div className="hidden md:block absolute top-8 right-8 text-xs font-mono text-muted-foreground/60 space-y-1">
         <div>SESSION:</div>
         <div>RANK:</div>
-      </div>
+      </div> */}
 
       <div className="relative w-full max-w-lg">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/40 via-purple-600/40 to-purple-500/40 rounded-lg blur-sm" />
@@ -182,6 +183,18 @@ export default function LoginPage() {
               </>
             )}
           </Button>
+
+          <p className="text-xs md:text-sm text-gray-400 leading-relaxed ">
+            By continuing, you agree to our{" "}
+            <Link href="/terms-of-service" className="text-purple-300 hover:text-purple-200 no-underline underline-offset-2">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="text-purple-300 hover:text-purple-200 no-underline underline-offset-2">
+              Privacy Policy
+            </Link>
+            .
+          </p>
           {/* 
           <button
             onClick={handleDevBypass}
