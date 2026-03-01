@@ -106,9 +106,12 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
   const [honorConfirmed, setHonorConfirmed] = useState(false)
   const [showGiveUpConfirm, setShowGiveUpConfirm] = useState(false)
   const [showQuickStartModal, setShowQuickStartModal] = useState(true) // Added state for QuickStartModal
+  const [lastLockedMilestone, setLastLockedMilestone] = useState(0)
+  const [lockedInMessage, setLockedInMessage] = useState<string | null>(null)
 
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
   const originalTitleRef = useRef<string>("")
+  const lockedInTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const requestWakeLock = async () => {
     try {
@@ -159,6 +162,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     setPausedTime(0)
     setIsFullscreen(true)
     setShowQuickStartModal(false)
+    setLastLockedMilestone(0)
+    setLockedInMessage(null)
 
     await requestWakeLock()
 
@@ -223,6 +228,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     setIsPaused(false)
     setPausedTime(0)
     setShowGiveUpConfirm(false)
+    setLastLockedMilestone(0)
+    setLockedInMessage(null)
     setSessionData(null)
 
     releaseWakeLock()
@@ -440,6 +447,34 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
   }, [timeLeft, isRunning, isPaused])
 
   useEffect(() => {
+    if (!isFullscreen || (!isRunning && !isPaused) || timeLeft <= 0) return
+
+    const elapsedMinutes = Math.floor((initialMinutes * 60 - timeLeft) / 60)
+    const checkpoints = [10, 20, 30, 40, 50].filter((minute) => minute <= initialMinutes)
+    const reachedCheckpoint = checkpoints.filter((minute) => elapsedMinutes >= minute).pop() || 0
+
+    if (reachedCheckpoint > 0 && reachedCheckpoint > lastLockedMilestone) {
+      setLastLockedMilestone(reachedCheckpoint)
+      setLockedInMessage(`${reachedCheckpoint} minutes locked in`)
+
+      if (lockedInTimeoutRef.current) {
+        clearTimeout(lockedInTimeoutRef.current)
+      }
+      lockedInTimeoutRef.current = setTimeout(() => {
+        setLockedInMessage(null)
+      }, 4000)
+    }
+  }, [timeLeft, isFullscreen, isRunning, isPaused, initialMinutes, lastLockedMilestone])
+
+  useEffect(() => {
+    return () => {
+      if (lockedInTimeoutRef.current) {
+        clearTimeout(lockedInTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     if (timeLeft === 0 && (isRunning || isPaused)) {
       handleTimerComplete()
     }
@@ -452,6 +487,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     setIsPaused(false)
     setPausedTime(0)
     setIsFullscreen(false)
+    setLastLockedMilestone(0)
+    setLockedInMessage(null)
 
     releaseWakeLock()
 
@@ -824,6 +861,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     setIsFullscreen(true)
     setIsRunning(true)
     setTimerStartTimestamp(Date.now()) // Set the start time for accurate calculation
+    setLastLockedMilestone(0)
+    setLockedInMessage(null)
 
     await requestWakeLock()
 
@@ -1284,6 +1323,13 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
 
                   <div className="text-center">
                     <div className="text-9xl font-bold text-white tabular-nums">{formatTime(timeLeft)}</div>
+                    <p
+                      className={`mt-3 text-sm text-cyan-100/90 transition-all duration-500 ${
+                        lockedInMessage ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
+                      }`}
+                    >
+                      {lockedInMessage || " "}
+                    </p>
                     {selectedGoal !== "none" && goals.find((g) => g.id === selectedGoal) && (
                       <p className="text-lg text-muted-foreground mt-6">
                         → {goals.find((g) => g.id === selectedGoal)?.title}
@@ -1527,3 +1573,5 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     </>
   )
 }
+
+
