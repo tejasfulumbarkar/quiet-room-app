@@ -45,7 +45,8 @@ import { SoundEffects } from "@/lib/sound-effects" // Added sound effects import
 import { PhilosophyGate } from "@/components/philosophy-gate"
 import { OnboardingModal } from "@/components/onboarding-modal"
 import { OnboardingHighlight } from "@/components/onboarding-highlight"
-import { TaskCreationModal } from "@/components/task-creation-modal"
+import { useCurrentFocus } from "@/contexts/current-focus-context"
+import { CurrentFocusDesktopSelector, CurrentFocusMobileStrip } from "@/components/current-focus-selector"
 
 type PageType =
   | "dashboard"
@@ -88,6 +89,7 @@ export default function DashboardPage() {
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   const router = useRouter()
   const supabase = getSupabaseBrowserClient()
+  const { currentGoalId, refreshCurrentFocus } = useCurrentFocus()
 
   const { refreshTrigger, triggerRefresh } = useDataRefresh() // Use refresh trigger to refetch data
 
@@ -373,7 +375,7 @@ export default function DashboardPage() {
           priority: newTask.priority,
           xp: xpForCreation,
           due_date: dueDate,
-          goal_id: newTask.linkedGoal || null,
+          goal_id: newTask.linkedGoal || currentGoalId || null,
           category: newTask.tags?.join(",") || null,
           completed: false,
           status: "active",
@@ -551,8 +553,8 @@ export default function DashboardPage() {
               <h2 className="text-4xl font-bold text-primary mb-2">Your Goals</h2>
               <p className="text-muted-foreground">Track your progress toward meaningful achievements</p>
             </div>
-            <GoalsGallery onGoalSelect={handleGoalSelect} />
-            <GoalsList onGoalSelect={handleGoalSelect} />
+            <GoalsGallery onGoalSelect={handleGoalSelect} currentGoalId={currentGoalId} />
+            <GoalsList onGoalSelect={handleGoalSelect} currentGoalId={currentGoalId} />
             <GoalsInsights />
             <div className="mt-12 mb-8">
               <MotivationalBanner />
@@ -835,6 +837,12 @@ export default function DashboardPage() {
               </button>
 
               {user && <StreakDisplay userId={user.id} />}
+              <CurrentFocusDesktopSelector
+                onCreateGoal={() => {
+                  setCurrentPage("goals")
+                  refreshCurrentFocus()
+                }}
+              />
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               <button
@@ -901,6 +909,12 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+          <CurrentFocusMobileStrip
+            onCreateGoal={() => {
+              setCurrentPage("goals")
+              refreshCurrentFocus()
+            }}
+          />
           <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-8">{renderContent()}</div>
         </main>
         {showXPToast && <XpToast xpAmount={xpToastData.xp} message={xpToastData.message} />}

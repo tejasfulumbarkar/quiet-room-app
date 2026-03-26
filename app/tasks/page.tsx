@@ -7,6 +7,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { XPToast } from "@/components/xp-toast"
 import { LevelUpCelebration } from "@/components/level-up-celebration"
 import { useDataRefresh } from "@/contexts/data-refresh-context"
+import { useCurrentFocus } from "@/contexts/current-focus-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { playSound } from "@/lib/sound-effects"
 
@@ -23,7 +24,13 @@ interface Task {
   status: "active" | "completed"
 }
 
-export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (taskId: string) => void }) {
+export default function TasksPage({
+  onNavigateToZen,
+  onTaskSelect,
+}: {
+  onNavigateToZen?: (taskId: string) => void
+  onTaskSelect?: (task: Task) => void
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null)
@@ -36,6 +43,7 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
   const [newLevel, setNewLevel] = useState(0)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const { refreshTrigger, triggerRefresh } = useDataRefresh()
+  const { currentGoalId } = useCurrentFocus()
   const [activeTab, setActiveTab] = useState<"active" | "overdue">("active")
   const [timeRemaining, setTimeRemaining] = useState<string>("")
 
@@ -162,7 +170,7 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
       priority: newTask.priority,
       xp: 3,
       due_date: dueDate,
-      goal_id: newTask.linkedGoal || null,
+      goal_id: newTask.linkedGoal || currentGoalId || null,
       category: newTask.tags?.join(",") || null,
       completed: false,
       status: "active",
@@ -338,7 +346,10 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
       className={`bg-card border ${showOverdueWarning ? "border-red-500/50" : "border-border"} rounded-xl p-4 transition-all hover:border-primary/50 cursor-pointer ${
         task.completed ? "opacity-50" : ""
       } relative`}
-      onClick={() => setSelectedTask(task)}
+      onClick={() => {
+        setSelectedTask(task)
+        onTaskSelect?.(task)
+      }}
     >
       <div className="flex items-start gap-3">
         <input
@@ -735,7 +746,12 @@ export default function TasksPage({ onNavigateToZen }: { onNavigateToZen?: (task
         </div>
       )}
 
-      <TaskCreationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreateTask={handleCreateTask} />
+      <TaskCreationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreateTask={handleCreateTask}
+        defaultLinkedGoal={currentGoalId}
+      />
       {taskToEdit && (
         <TaskCreationModal
           isOpen={isEditModalOpen}

@@ -23,6 +23,7 @@ interface TaskCreationModalProps {
   onCreateTask?: (task: NewTask) => void
   initialData?: Partial<NewTask>
   mode?: "create" | "edit"
+  defaultLinkedGoal?: string | null
 }
 
 export function TaskCreationModal({
@@ -31,6 +32,7 @@ export function TaskCreationModal({
   onCreateTask,
   initialData,
   mode = "create",
+  defaultLinkedGoal = null,
 }: TaskCreationModalProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false)
   const [newTask, setNewTask] = useState<NewTask>({
@@ -65,6 +67,14 @@ export function TaskCreationModal({
       }
     }
   }, [isOpen, initialData])
+
+  useEffect(() => {
+    if (!isOpen || mode !== "create" || initialData) return
+    setNewTask((prev) => ({
+      ...prev,
+      linkedGoal: defaultLinkedGoal || "",
+    }))
+  }, [isOpen, mode, initialData, defaultLinkedGoal])
 
   useEffect(() => {
     if (isOpen) {
@@ -112,7 +122,7 @@ export function TaskCreationModal({
       description: "",
       priority: "medium",
       effort: "medium",
-      linkedGoal: "",
+      linkedGoal: defaultLinkedGoal || "",
       tags: [],
       xp: 3,
     })

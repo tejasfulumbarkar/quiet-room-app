@@ -13,6 +13,7 @@ import { XPToast } from "@/components/xp-toast"
 import { LevelUpCelebration } from "@/components/level-up-celebration"
 import { Textarea } from "@/components/ui/textarea"
 import { SoundEffects, resolveSound, playSound } from "@/lib/sound-effects"
+import { useCurrentFocus } from "@/contexts/current-focus-context"
 
 interface Goal {
   id: string
@@ -108,6 +109,7 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
   const [showQuickStartModal, setShowQuickStartModal] = useState(true) // Added state for QuickStartModal
   const [lastLockedMilestone, setLastLockedMilestone] = useState(0)
   const [lockedInMessage, setLockedInMessage] = useState<string | null>(null)
+  const { currentGoalId } = useCurrentFocus()
 
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
   const originalTitleRef = useRef<string>("")
@@ -256,6 +258,12 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
     }
   }, [taskId])
 
+  useEffect(() => {
+    if (!taskId) {
+      setSelectedGoal(currentGoalId || "none")
+    }
+  }, [currentGoalId, taskId])
+
   const fetchTasks = async () => {
     const supabase = getSupabaseBrowserClient()
     const {
@@ -285,6 +293,8 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
       setSelectedTask(data.id)
       if (data.goal_id) {
         setSelectedGoal(data.goal_id)
+      } else {
+        setSelectedGoal(currentGoalId || "none")
       }
     }
   }
@@ -995,7 +1005,7 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
 
             <Card
               className={`relative p-8 border-purple-500/20 overflow-hidden ${
-                activeEnvironment ? "bg-black/40 backdrop-blur-md border-white/20" : "bg-card"
+                activeEnvironment ? "bg-black/40 backdrop-blur-md border-border/60" : "bg-card"
               }`}
               style={
                 activeEnvironment?.background_value && activeEnvironment?.file_type !== "mp4"
@@ -1023,13 +1033,13 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs md:text-sm text-muted-foreground">
-                      Route XP to goal: <span className="text-xs">(Personal XP Only)</span>
+                      Route XP to goal: 
                     </label>
                     <Select value={selectedGoal} onValueChange={setSelectedGoal}>
-                      <SelectTrigger className="bg-background/50 border-purple-500/30">
+                      <SelectTrigger className="bg-[#09090d]/90 border-border/60 text-slate-100">
                         <SelectValue placeholder="Select a goal" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-[#09090d] border-border text-slate-100">
                         <SelectItem value="none">No Goal (Personal XP Only)</SelectItem>
                         {goals.map((goal) => (
                           <SelectItem key={goal.id} value={goal.id}>
@@ -1041,12 +1051,12 @@ export default function ZenModePage({ onNavigate, taskId, goalName, goalId, onNa
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs md:text-sm text-muted-foreground">Select task:</label>
+                    <label className="text-xs md:text-sm text-muted-foreground">Select Task to complete in Focus Session:</label>
                     <Select value={selectedTask} onValueChange={setSelectedTask}>
-                      <SelectTrigger className="bg-background/50 border-purple-500/30">
+                      <SelectTrigger className="bg-[#09090d]/90 border-border/60 text-slate-100">
                         <SelectValue placeholder="Select a task" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-[#09090d] border-border text-slate-100">
                         <SelectItem value="none">No Task</SelectItem>
                         {tasks.map((task) => (
                           <SelectItem key={task.id} value={task.id}>

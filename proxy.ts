@@ -2,31 +2,35 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export default async function middleware(request: NextRequest) {
-  const supabaseResponse = NextResponse.next()
+  let response = NextResponse.next()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            supabaseResponse.cookies.set(name, value, options)
-          })
-        },
-      },
+  get(name: string) {
+    return request.cookies.get(name)?.value
+  },
+  set(name: string, value: string, options) {
+    response.cookies.set(name, value, options)
+  },
+  remove(name: string, options) {
+    response.cookies.set(name, "", options)
+  },
+},
     }
   )
 
-  // 🔥 FIX: Skip auth refresh on auth routes to prevent "refresh token not found"
   let user = null
 
+  // ✅ FIX HERE
   if (!request.nextUrl.pathname.startsWith("/auth")) {
-    const { data } = await supabase.auth.getUser()
-    user = data.user
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    user = session?.user ?? null
   }
 
   const publicRoutes = [
@@ -38,9 +42,10 @@ export default async function middleware(request: NextRequest) {
     "/auth/signup",
     "/auth/callback",
   ]
+
   const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname)
 
-  if (!user && !isPublicRoute && !request.nextUrl.pathname.startsWith("/auth")) {
+  if (!user && !isPublicRoute) {
     return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
@@ -52,9 +57,15 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
-  return supabaseResponse
+  return response
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/dashboard/:path*",
+    "/tasks/:path*",
+    "/goals/:path*",
+    "/leaderboard/:path*",
+    "/zen-mode/:path*",
+  ],
 }

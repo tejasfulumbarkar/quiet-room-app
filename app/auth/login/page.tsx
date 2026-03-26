@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createTestUserBypass } from "../actions"
 import Image from "next/image"
 import Link from "next/link"
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = getSupabaseBrowserClient()
 
   const TEST_EMAIL = "testuser@gmail.com"
@@ -21,14 +22,35 @@ export default function LoginPage() {
 
   // Check if user is already logged in
   useEffect(() => {
+    const nextPath = searchParams.get("next") || "/dashboard"
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        router.replace("/dashboard")
+        router.replace(nextPath)
       } else {
         setIsCheckingSession(false)
       }
     })
-  }, [router, supabase])
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        router.replace(nextPath)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [router, supabase, searchParams])
+
+  useEffect(() => {
+    const err = searchParams.get("error")
+    if (err) {
+      setError(decodeURIComponent(err))
+    }
+  }, [searchParams])
 
   // Show loading while checking session
   if (isCheckingSession) {

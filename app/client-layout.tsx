@@ -2,8 +2,9 @@
 
 import type React from "react"
 import { useEffect } from "react"
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import { DataRefreshProvider } from "@/contexts/data-refresh-context"
+import { CurrentFocusProvider } from "@/contexts/current-focus-context"
 
 export default function ClientLayout({
   children,
@@ -32,8 +33,10 @@ export default function ClientLayout({
         onDragStart={(e) => e.preventDefault()}
       >
         <div className="fixed inset-0 bg-background -z-10" />
-        <DataRefreshProvider>{children}</DataRefreshProvider>
-        <Analytics />
+        <DataRefreshProvider>
+          <CurrentFocusProvider>{children}</CurrentFocusProvider>
+        </DataRefreshProvider>
+        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   )

@@ -10,6 +10,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { getDeadlineInfo } from "@/lib/deadline-utils"
+import { useCurrentFocus } from "@/contexts/current-focus-context"
 
 interface VisionBoardItem {
   id: string
@@ -42,9 +43,10 @@ interface NewGoal {
 
 interface GoalsGalleryProps {
   onGoalSelect?: (goalId: string) => void
+  currentGoalId?: string | null
 }
 
-export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
+export function GoalsGallery({ onGoalSelect, currentGoalId }: GoalsGalleryProps) {
   const [visionItems, setVisionItems] = useState<VisionBoardItem[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
   const [isWizardOpen, setIsWizardOpen] = useState(false)
@@ -58,6 +60,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
   const [isEditWizardOpen, setIsEditWizardOpen] = useState(false)
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { refreshCurrentFocus } = useCurrentFocus()
 
   const handleCreateGoal = async (goal: NewGoal) => {
     const supabase = getSupabaseBrowserClient()
@@ -85,6 +88,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
 
     if (!error) {
       fetchGoals()
+      refreshCurrentFocus()
       setIsWizardOpen(false)
     }
   }
@@ -221,6 +225,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
 
     if (!error) {
       fetchGoals()
+      refreshCurrentFocus()
       setShowGoalMenu(null)
     }
   }
@@ -250,6 +255,7 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
 
     if (!error) {
       fetchGoals()
+      refreshCurrentFocus()
       setIsEditWizardOpen(false)
       setGoalToEdit(null)
       setShowGoalMenu(null)
@@ -325,8 +331,15 @@ export function GoalsGallery({ onGoalSelect }: GoalsGalleryProps) {
             <div
               key={goal.id}
               onClick={() => setSelectedGoal(goal)}
-              className="flex-shrink-0 w-56 md:w-64 rune-card hover:shadow-2xl hover:shadow-primary/25 cursor-pointer transition-all duration-300 group relative"
+              className={`flex-shrink-0 w-56 md:w-64 rune-card hover:shadow-2xl hover:shadow-primary/25 cursor-pointer transition-all duration-300 group relative ${
+                currentGoalId === goal.id ? "ring-1 ring-primary/40 border-primary/40" : ""
+              }`}
             >
+              {currentGoalId === goal.id && (
+                <div className="absolute top-2 left-2 z-10 px-2 py-1 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/40">
+                  Current Focus
+                </div>
+              )}
               <div className="absolute top-2 right-2 z-10">
                 <button
                   onClick={(e) => {

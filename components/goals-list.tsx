@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 import { GoalCreationWizard } from "@/components/goal-creation-wizard"
 import { getDeadlineInfo } from "@/lib/deadline-utils"
+import { useCurrentFocus } from "@/contexts/current-focus-context"
 
 interface Goal {
   id: string
@@ -24,9 +25,10 @@ interface Goal {
 
 interface GoalsListProps {
   onGoalSelect?: (goalId: string) => void
+  currentGoalId?: string | null
 }
 
-export function GoalsList({ onGoalSelect }: GoalsListProps) {
+export function GoalsList({ onGoalSelect, currentGoalId }: GoalsListProps) {
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedSections, setExpandedSections] = useState({
@@ -40,6 +42,7 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
   const [goalToEdit, setGoalToEdit] = useState<Goal | null>(null)
   const [isEditWizardOpen, setIsEditWizardOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"active" | "overdue">("active")
+  const { refreshCurrentFocus } = useCurrentFocus()
 
   useEffect(() => {
     fetchGoals()
@@ -105,6 +108,7 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
 
     if (!error) {
       fetchGoals()
+      refreshCurrentFocus()
       setShowGoalMenu(null)
       setSelectedGoal(null)
     }
@@ -134,6 +138,7 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
 
     if (!error) {
       fetchGoals()
+      refreshCurrentFocus()
       setIsEditWizardOpen(false)
       setGoalToEdit(null)
       setShowGoalMenu(null)
@@ -158,13 +163,19 @@ export function GoalsList({ onGoalSelect }: GoalsListProps) {
     const estimatedHours = goal.target_hours || Math.ceil(goal.max_xp / 300)
     const estimatedAura = estimatedHours * 10
     const deadlineInfo = getDeadlineInfo(goal.target_date, goal.timeline)
+    const isCurrentFocus = currentGoalId === goal.id
 
     return (
       <div className="relative">
         <button
           onClick={() => setSelectedGoal(goal)}
-          className={`bg-card border ${showOverdueWarning ? "border-red-500/50" : "border-border"} rounded-lg p-4 hover:border-primary/50 transition-colors text-left group w-full`}
+          className={`bg-card border ${showOverdueWarning ? "border-red-500/50" : isCurrentFocus ? "border-primary/50 bg-primary/5" : "border-border"} rounded-lg p-4 hover:border-primary/50 transition-colors text-left group w-full`}
         >
+          {isCurrentFocus && (
+            <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-semibold bg-primary/20 text-primary border border-primary/40 z-10">
+              Current Focus
+            </div>
+          )}
           {showOverdueWarning && (
             <div className="absolute top-2 right-2 bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 border border-red-500/30 z-10">
               <AlertTriangle className="w-3 h-3" />
